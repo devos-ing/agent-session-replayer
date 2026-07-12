@@ -4,78 +4,53 @@ import App from "../src/App";
 
 afterEach(() => vi.useRealTimers());
 
-describe("chat playback experience", () => {
-  it("begins with an untouched intro and reveals an event only after Next", () => {
+describe("case autoplay experience", () => {
+  it("starts case one without a user click", () => {
     render(<App />);
-    expect(screen.getByText(/press next to start/i)).toBeInTheDocument();
-    expect(screen.queryByRole("article")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
+    expect(screen.getByText(/case 1 of 3/i)).toBeInTheDocument();
     expect(screen.getByRole("article", { name: /task received/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^next$/i })).not.toBeInTheDocument();
   });
 
-  it("finishes typing without advancing, then advances on a separate press", () => {
-    render(<App />);
-    const next = screen.getByRole("button", { name: /^next$/i });
-    fireEvent.click(next);
-    expect(next).toHaveTextContent(/finish/i);
-    fireEvent.click(next);
-    expect(screen.getByRole("article", { name: /task received/i })).toBeInTheDocument();
-    expect(screen.queryByRole("article", { name: /plan the fix/i })).not.toBeInTheDocument();
-    fireEvent.click(next);
-    expect(screen.getByRole("article", { name: /plan the fix/i })).toBeInTheDocument();
-    expect(screen.getByText(/task received/i, { selector: ".event-summary-row *" })).toBeInTheDocument();
-  });
-
-  it("does not mount a later block before the reveal reaches its row", () => {
+  it("autoplays every event and collapses completed messages", () => {
     vi.useFakeTimers();
     const { container } = render(<App />);
-
-    fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-
-    expect(container.querySelectorAll(".chat-block")).toHaveLength(0);
-
-    act(() => vi.advanceTimersByTime(18));
-
-    expect(container.querySelectorAll(".chat-block")).toHaveLength(1);
-    expect(container.querySelector(".chat-block--message")).toBeInTheDocument();
-    expect(container.querySelector(".chat-block--status")).not.toBeInTheDocument();
-
-    fireEvent.click(
-      screen.getByRole("button", { name: /finish current event/i }),
-    );
-
-    expect(container.querySelectorAll(".chat-block")).toHaveLength(2);
-    expect(container.querySelector(".chat-block--status")).toBeInTheDocument();
-    expect(
-      screen.getByRole("article", { name: /task received/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("article", { name: /plan the fix/i }),
-    ).not.toBeInTheDocument();
+    for (let index = 0; index < 5000 && !screen.queryByText(/case complete/i); index += 1) {
+      act(() => vi.runOnlyPendingTimers());
+    }
+    expect(container.querySelectorAll(".event-summary-row")).toHaveLength(8);
+    expect(screen.getByRole("article", { name: /approved/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/case complete/i).length).toBeGreaterThan(0);
   });
 
-  it("previous and restart reconstruct deterministic transcript state", () => {
+  it("changes cases immediately and restarts from event one", () => {
     render(<App />);
-    const next = screen.getByRole("button", { name: /^next$/i });
-    fireEvent.click(next); fireEvent.click(next); fireEvent.click(next); fireEvent.click(next);
-    fireEvent.click(screen.getByRole("button", { name: /previous/i }));
-    expect(screen.getByRole("article", { name: /task received/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /restart/i }));
-    expect(screen.getByText(/press next to start/i)).toBeInTheDocument();
+    const next = screen.getByRole("button", { name: /next case/i });
+    fireEvent.click(next);
+    expect(screen.getByText(/case 2 of 3/i)).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: /normalize cache expiry/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /restart case/i }));
+    expect(screen.getByRole("article", { name: /normalize cache expiry/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /previous case/i }));
+    expect(screen.getByText(/case 1 of 3/i)).toBeInTheDocument();
   });
 
-  it("ignores a stale scheduled tick after restart", () => {
+  it("clamps controls at the first and final cases", () => {
+    render(<App />);
+    expect(screen.getByRole("button", { name: /previous case/i })).toBeDisabled();
+    const next = screen.getByRole("button", { name: /next case/i });
+    fireEvent.click(next);
+    fireEvent.click(next);
+    expect(screen.getByText(/case 3 of 3/i)).toBeInTheDocument();
+    expect(next).toBeDisabled();
+  });
+
+  it("does not mount future block rows", () => {
     vi.useFakeTimers();
-    render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: /^next$/i }));
-    fireEvent.click(screen.getByRole("button", { name: /restart/i }));
-    act(() => vi.runAllTimers());
-    expect(screen.getByText(/press next to start/i)).toBeInTheDocument();
-  });
-
-  it("does not expose JSON import controls", () => {
-    render(<App />);
-    expect(screen.queryByRole("button", { name: /import json/i })).not.toBeInTheDocument();
-    expect(screen.getByText(/scripted json demo/i)).toBeInTheDocument();
+    const { container } = render(<App />);
+    expect(container.querySelectorAll(".chat-block")).toHaveLength(0);
+    act(() => vi.advanceTimersByTime(18));
+    expect(container.querySelectorAll(".chat-block")).toHaveLength(1);
+    expect(container.querySelector(".chat-block--status")).not.toBeInTheDocument();
   });
 });

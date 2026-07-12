@@ -1,0 +1,84 @@
+{
+  "version": 3,
+  "title": "Three bugs caught by adversarial review",
+  "agents": {
+    "implementer": { "name": "claude", "role": "implementer", "context": "the issue, repository, tests, and its own reasoning" },
+    "reviewer": { "name": "claude", "role": "adversarial reviewer", "context": "only the diff, told to assume the code is wrong" }
+  },
+  "cases": [{
+  "id": "async-close",
+  "title": "The async close",
+  "summary": "Reviewer catches a failure-path cleanup bug.",
+  "repository": "acme/dashboard",
+  "branch": "fix/session-refresh-race",
+  "events": [
+    { "type": "task_received", "actor": "implementer", "title": "Task received", "summary": "Fix concurrent session refresh without changing the public API.", "blocks": [
+      { "kind": "message", "content": "Users are occasionally signed out when two requests refresh an expired session at the same time. I’ll trace the refresh path and keep the public API unchanged." },
+      { "kind": "status", "title": "issue #1842", "content": "investigating session refresh race" }
+    ]},
+    { "type": "plan", "actor": "implementer", "title": "Plan the fix", "summary": "Deduplicate callers around one in-flight promise per session.", "blocks": [
+      { "kind": "message", "content": "I’ll keep one in-flight refresh promise per session. Concurrent callers reuse it; the entry is cleared when the request settles." },
+      { "kind": "tool_call", "title": "Read", "content": "src/auth/session.ts · tests/auth/session.test.ts" },
+      { "kind": "tool_output", "title": "Search results", "content": "refreshSession has 4 callers; all depend on the current Promise<Session> contract." }
+    ]},
+    { "type": "patch", "actor": "implementer", "title": "Patch prepared", "summary": "Added the in-flight refresh map and preserved the public signature.", "blocks": [
+      { "kind": "message", "content": "The first pass is small: share pending work, await it, then remove the key." },
+      { "kind": "code", "title": "src/auth/session.ts", "language": "typescript", "content": "const refreshes = new Map<string, Promise<Session>>();\n\nexport async function refreshSession(id: string) {\n  const pending = refreshes.get(id);\n  if (pending) return pending;\n  const refresh = requestNewSession(id);\n  refreshes.set(id, refresh);\n  const session = await refresh;\n  refreshes.delete(id);\n  return session;\n}" },
+      { "kind": "status", "title": "tests", "content": "17 passed · typecheck clean" }
+    ]},
+    { "type": "review_request", "actor": "implementer", "title": "Review requested", "summary": "Handed the diff to a fresh adversarial context.", "blocks": [
+      { "kind": "message", "content": "Implementation complete. Please review concurrency safety, cleanup behavior, and API compatibility." },
+      { "kind": "tool_call", "title": "Dispatch reviewer", "content": "context: diff only · posture: find the way this is wrong" },
+      { "kind": "status", "title": "handoff", "content": "waiting for adversarial review" }
+    ]},
+    { "type": "review_start", "actor": "reviewer", "title": "Adversarial review", "summary": "Reviewer traces rejection instead of trusting happy-path tests.", "blocks": [
+      { "kind": "message", "content": "I’m treating the patch as incorrect until every exit path is accounted for. The success path cleans up; now I’ll trace rejection." },
+      { "kind": "tool_call", "title": "Trace", "content": "requestNewSession rejection → await refresh throws → function exits" },
+      { "kind": "tool_output", "title": "Control flow", "content": "refreshes.delete(id) is unreachable when the promise rejects." }
+    ]},
+    { "type": "blocking_finding", "actor": "reviewer", "title": "Blocking finding", "summary": "A rejected promise remains cached and poisons every later retry.", "blocks": [
+      { "kind": "finding", "title": "P1 · stale rejected promise", "content": "A failed refresh never leaves the map. Every later caller receives the same rejected promise, turning a transient failure into a permanent sign-out loop." },
+      { "kind": "code", "title": "failure path", "language": "typescript", "content": "const session = await refresh; // throws\nrefreshes.delete(id);         // never runs\nreturn session;" },
+      { "kind": "status", "title": "review", "content": "changes requested" }
+    ]},
+    { "type": "revision", "actor": "implementer", "title": "Revision applied", "summary": "Moved cleanup into finally and added a retry regression test.", "blocks": [
+      { "kind": "message", "content": "Confirmed. Cleanup must cover both resolution paths. I moved it into finally and added the missing rejection case." },
+      { "kind": "patch", "title": "src/auth/session.ts", "content": "try {\n  return await refresh;\n} finally {\n  refreshes.delete(id);\n}" },
+      { "kind": "tool_output", "title": "Focused test", "content": "rejects first request → releases key → second request succeeds" }
+    ]},
+    { "type": "verification", "actor": "reviewer", "title": "Fix verified", "summary": "Both success and failure paths now release the session key.", "blocks": [
+      { "kind": "tool_call", "title": "Verify", "content": "bun test tests/auth/session.test.ts && bun run typecheck" },
+      { "kind": "tool_output", "title": "Result", "content": "18 tests passed · 0 failed · typecheck clean" },
+      { "kind": "result", "title": "review verdict", "content": "Concurrent callers deduplicate; failures release the key; a subsequent retry succeeds." }
+    ]},
+    { "type": "approval", "actor": "reviewer", "title": "Approved", "summary": "The race and its failure path are covered without expanding the API.", "blocks": [
+      { "kind": "message", "content": "The blocker is resolved. The revised patch is narrow, reversible, and covers the failure mode the first pass missed." },
+      { "kind": "result", "title": "approved", "content": "ready to merge after CI" }
+    ]}
+  ]}, {
+    "id": "negative-timestamp",
+    "title": "The negative timestamp",
+    "summary": "Reviewer catches an invalid signed timestamp.",
+    "repository": "acme/runtime",
+    "branch": "fix/cache-expiry",
+    "events": [
+      { "type": "task_received", "actor": "implementer", "title": "Normalize cache expiry", "summary": "Claude receives the cache-expiry task.", "blocks": [{ "kind": "message", "content": "I’ll normalize the persisted timestamp before comparing it with the current clock." }] },
+      { "type": "patch", "actor": "implementer", "title": "Initial conversion", "summary": "Claude converts the stored timestamp.", "blocks": [{ "kind": "patch", "title": "src/cache/expiry.ts", "language": "typescript", "content": "const expiresAt = Number(record.expiresAt);\nreturn expiresAt <= Date.now();" }] },
+      { "type": "blocking_finding", "actor": "reviewer", "title": "Signedness is unchecked", "summary": "Reviewer finds that negative values bypass expiry.", "blocks": [{ "kind": "finding", "title": "Blocking", "content": "A negative persisted timestamp is accepted without validation and can create an invalid cache lifetime." }] },
+      { "type": "approval", "actor": "reviewer", "title": "Range guard verified", "summary": "Reviewer approves explicit timestamp validation.", "blocks": [{ "kind": "result", "title": "Approved", "content": "The parser rejects negative and out-of-range timestamps before cache comparison." }] }
+    ]
+  }, {
+    "id": "eager-default",
+    "title": "The eager default",
+    "summary": "Reviewer catches fallback work executing too early.",
+    "repository": "acme/config",
+    "branch": "fix/lazy-default",
+    "events": [
+      { "type": "task_received", "actor": "implementer", "title": "Add configuration fallback", "summary": "Claude receives the fallback task.", "blocks": [{ "kind": "message", "content": "I’ll use the discovered value when present and compute a fallback otherwise." }] },
+      { "type": "plan", "actor": "implementer", "title": "Preserve the primary path", "summary": "Claude plans a compact optional fallback.", "blocks": [{ "kind": "status", "title": "Plan", "content": "Keep lookup first, then provide the default expression." }] },
+      { "type": "patch", "actor": "implementer", "title": "Initial fallback", "summary": "Claude adds an eager fallback expression.", "blocks": [{ "kind": "code", "title": "src/config/load.ts", "language": "typescript", "content": "const config = discovered ?? buildDefaultConfig();" }] },
+      { "type": "blocking_finding", "actor": "reviewer", "title": "Default performs side effects", "summary": "Reviewer finds the default is built too early.", "blocks": [{ "kind": "finding", "title": "Blocking", "content": "The target helper evaluates both arguments, so buildDefaultConfig writes files even when discovered is present." }] },
+      { "type": "approval", "actor": "reviewer", "title": "Lazy fallback verified", "summary": "Reviewer approves the explicit lazy branch.", "blocks": [{ "kind": "result", "title": "Approved", "content": "The default builder now runs only when no discovered configuration exists." }] }
+    ]
+  }]
+}
