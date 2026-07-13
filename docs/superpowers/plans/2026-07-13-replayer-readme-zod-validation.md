@@ -175,7 +175,7 @@ const eventTypeSchema = z.enum([
 ]);
 const blockKindSchema = z.enum([
   "message", "code", "tool_call", "tool_output", "finding", "patch",
-  "status", "result",
+  "git_diff", "status", "result",
 ]);
 
 const agentSchema = z.object({
@@ -439,7 +439,7 @@ Expected: PASS; package ESM/CJS/declarations/CSS and the Vite application build 
 
 - [ ] **Step 4: Run the full test suite**
 
-Run: `rtk bun test`
+Run: `rtk bun run test`
 
 Expected: PASS with no failed test files.
 

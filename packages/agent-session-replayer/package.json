@@ -35,5 +35,8 @@
     "tsup": "^8.5.1",
     "typescript": "^5.9.2"
   },
-  "keywords": ["react", "agent", "session", "replay", "workflow"]
+  "keywords": ["react", "agent", "session", "replay", "workflow"],
+  "dependencies": {
+    "zod": "^4.0.17"
+  }
 }

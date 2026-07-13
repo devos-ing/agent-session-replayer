@@ -71,7 +71,7 @@ Each event requires:
 Each block requires:
 
 - `id`: non-empty and unique within its event;
-- `kind`: one of `message`, `code`, `tool_call`, `tool_output`, `finding`, `patch`, `status`, or `result`;
+- `kind`: one of `message`, `code`, `tool_call`, `tool_output`, `finding`, `patch`, `git_diff`, `status`, or `result`;
 - `content`: non-empty string;
 - `title`: optional non-empty string; and
 - `language`: optional non-empty string.

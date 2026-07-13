@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { initialPlaybackState, playbackReducer, revealEvent } from "./playback";
+import { parseReplayerProps } from "./validation";
 import { GitDiffBlock } from "./GitDiffBlock";
 import type {
   AgentActor,
@@ -35,24 +36,6 @@ const colorVariables: Record<keyof AgentSessionColors, string> = {
   danger: "--asr-danger",
   focus: "--asr-focus",
 };
-
-function validateCases(cases: AgentSession[]): void {
-  if (cases.length === 0) throw new Error("AgentSessionReplayer requires at least one case.");
-  const ids = new Set<string>();
-  for (const item of cases) {
-    if (!item.id || ids.has(item.id)) throw new Error("AgentSessionReplayer case IDs must be non-empty and unique.");
-    ids.add(item.id);
-    if (item.events.length === 0) throw new Error(`AgentSessionReplayer case "${item.id}" requires at least one event.`);
-    const eventIds = new Set<string>();
-    for (const event of item.events) {
-      if (!event.id || eventIds.has(event.id)) throw new Error(`AgentSessionReplayer event IDs in "${item.id}" must be non-empty and unique.`);
-      eventIds.add(event.id);
-      if (event.blocks.length === 0) throw new Error(`AgentSessionReplayer event "${event.id}" requires at least one block.`);
-      const blockIds = new Set(event.blocks.map((block) => block.id));
-      if (blockIds.size !== event.blocks.length || blockIds.has("")) throw new Error(`AgentSessionReplayer block IDs in "${event.id}" must be non-empty and unique.`);
-    }
-  }
-}
 
 function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState(false);
@@ -168,29 +151,31 @@ function CollapsingEvent({
   </div>;
 }
 
-export function AgentSessionReplayer({
-  agents,
-  cases,
-  typingSpeed = DEFAULT_TYPING_SPEED,
-  eventDelayMs = DEFAULT_EVENT_DELAY,
-  height = 720,
-  colors,
-  caseIndex,
-  initialCaseIndex = 0,
-  className,
-  onCaseChange,
-  onEventStart,
-  onEventComplete,
-  onCaseComplete,
-}: AgentSessionReplayerProps) {
-  validateCases(cases);
-  if (!Number.isFinite(typingSpeed) || typingSpeed <= 0) throw new Error("typingSpeed must be greater than zero.");
-  if (!Number.isFinite(eventDelayMs) || eventDelayMs < 0) throw new Error("eventDelayMs cannot be negative.");
-  if (!Number.isFinite(height) || height <= 0) throw new Error("height must be greater than zero.");
+export function AgentSessionReplayer(props: AgentSessionReplayerProps) {
+  const {
+    agents,
+    cases,
+    typingSpeed,
+    eventDelayMs,
+    height,
+    colors,
+    caseIndex,
+    initialCaseIndex,
+    className,
+    onCaseChange,
+    onEventStart,
+    onEventComplete,
+    onCaseComplete,
+  } = parseReplayerProps({
+    ...props,
+    typingSpeed: props.typingSpeed === undefined ? DEFAULT_TYPING_SPEED : props.typingSpeed,
+    eventDelayMs: props.eventDelayMs === undefined ? DEFAULT_EVENT_DELAY : props.eventDelayMs,
+    height: props.height === undefined ? 720 : props.height,
+    initialCaseIndex: props.initialCaseIndex === undefined ? 0 : props.initialCaseIndex,
+  });
   const controlled = caseIndex !== undefined;
-  const [internalCaseIndex, setInternalCaseIndex] = useState(() => Math.min(Math.max(initialCaseIndex, 0), cases.length - 1));
+  const [internalCaseIndex, setInternalCaseIndex] = useState(initialCaseIndex);
   const resolvedCaseIndex = controlled ? caseIndex : internalCaseIndex;
-  if (resolvedCaseIndex < 0 || resolvedCaseIndex >= cases.length) throw new Error("caseIndex is outside the available cases.");
   const [state, dispatch] = useReducer(playbackReducer, undefined, initialPlaybackState);
   const [generation, bumpGeneration] = useReducer((value: number) => value + 1, 0);
   const reduceMotion = usePrefersReducedMotion();
