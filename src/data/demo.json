@@ -43,7 +43,7 @@
     ]},
     { "type": "revision", "actor": "implementer", "title": "Revision applied", "summary": "Moved cleanup into finally and added a retry regression test.", "blocks": [
       { "kind": "message", "content": "Confirmed. Cleanup must cover both resolution paths. I moved it into finally and added the missing rejection case." },
-      { "kind": "patch", "title": "src/auth/session.ts", "content": "try {\n  return await refresh;\n} finally {\n  refreshes.delete(id);\n}" },
+      { "kind": "git_diff", "title": "src/auth/session.ts", "content": "diff --git a/src/auth/session.ts b/src/auth/session.ts\nindex 4c52a11..9fd8210 100644\n--- a/src/auth/session.ts\n+++ b/src/auth/session.ts\n@@ -1,3 +1,5 @@\n-const session = await refresh;\n-refreshes.delete(id);\n-return session;\n+try {\n+  return await refresh;\n+} finally {\n+  refreshes.delete(id);\n+}" },
       { "kind": "tool_output", "title": "Focused test", "content": "rejects first request → releases key → second request succeeds" }
     ]},
     { "type": "verification", "actor": "reviewer", "title": "Fix verified", "summary": "Both success and failure paths now release the session key.", "blocks": [

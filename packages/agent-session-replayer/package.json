@@ -1,0 +1,39 @@
+{
+  "name": "agent-session-replayer",
+  "version": "0.1.0",
+  "description": "Embeddable scripted agent session replayer for React",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": ["./dist/styles.css"],
+  "files": ["dist", "README.md"],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./styles.css": "./dist/styles.css"
+  },
+  "scripts": {
+    "build": "tsup && tailwindcss -i ./src/styles.css -o ./dist/styles.css --minify",
+    "pack": "bun run build && bun pm pack --destination ./artifacts"
+  },
+  "peerDependencies": {
+    "react": ">=18 <20",
+    "react-dom": ">=18 <20"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwindcss": "^4.3.2",
+    "@tailwindcss/cli": "^4.3.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.2"
+  },
+  "keywords": ["react", "agent", "session", "replay", "workflow"]
+}

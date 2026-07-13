@@ -18,9 +18,26 @@ describe("case autoplay experience", () => {
     for (let index = 0; index < 5000 && !screen.queryByText(/case complete/i); index += 1) {
       act(() => vi.runOnlyPendingTimers());
     }
-    expect(container.querySelectorAll(".event-summary-row")).toHaveLength(8);
+    expect(container.querySelectorAll(".asr-event-summary-row")).toHaveLength(8);
     expect(screen.getByRole("article", { name: /approved/i })).toBeInTheDocument();
     expect(screen.getAllByText(/case complete/i).length).toBeGreaterThan(0);
+  });
+
+  it("renders the demo Git diff with semantic lines", () => {
+    vi.useFakeTimers();
+    const { container } = render(<App />);
+
+    for (let index = 0; index < 5000 && !container.querySelector(".asr-git-diff code")?.textContent?.includes("+  refreshes.delete(id);"); index += 1) {
+      act(() => vi.runOnlyPendingTimers());
+    }
+
+    const addition = Array.from(container.querySelectorAll(".asr-git-diff-line--addition"))
+      .find((line) => line.textContent === "+  refreshes.delete(id);");
+    const removal = Array.from(container.querySelectorAll(".asr-git-diff-line--removal"))
+      .find((line) => line.textContent === "-refreshes.delete(id);");
+    expect(container.querySelector(".asr-chat-block--git_diff")).toBeInTheDocument();
+    expect(addition).toBeInTheDocument();
+    expect(removal).toBeInTheDocument();
   });
 
   it("changes cases immediately and restarts from event one", () => {
@@ -48,9 +65,9 @@ describe("case autoplay experience", () => {
   it("does not mount future block rows", () => {
     vi.useFakeTimers();
     const { container } = render(<App />);
-    expect(container.querySelectorAll(".chat-block")).toHaveLength(0);
+    expect(container.querySelectorAll(".asr-chat-block")).toHaveLength(0);
     act(() => vi.advanceTimersByTime(18));
-    expect(container.querySelectorAll(".chat-block")).toHaveLength(1);
-    expect(container.querySelector(".chat-block--status")).not.toBeInTheDocument();
+    expect(container.querySelectorAll(".asr-chat-block")).toHaveLength(1);
+    expect(container.querySelector(".asr-chat-block--status")).not.toBeInTheDocument();
   });
 });

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const eventTypes = ["task_received", "plan", "patch", "review_request", "review_start", "blocking_finding", "revision", "verification", "approval"] as const;
-const blockKinds = ["message", "code", "tool_call", "tool_output", "finding", "patch", "status", "result"] as const;
+const blockKinds = ["message", "code", "tool_call", "tool_output", "finding", "patch", "git_diff", "status", "result"] as const;
 
 const blockSchema = z.object({
   kind: z.enum(blockKinds),
