@@ -4,6 +4,8 @@ An SSR-safe React component for replaying a fixed, scripted implementer/reviewer
 
 The complete package guide, including callback ordering, theming, SSR, reduced motion, accessibility, and error examples, is in [the package README](packages/agent-session-replayer/README.md).
 
+![Agent Session Replayer demo](docs/images/replayer-demo.jpg)
+
 ## Install and run
 
 ```bash
