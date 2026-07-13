@@ -39,4 +39,10 @@ describe("Bun project contract", () => {
     });
     expect(replayerPackageJson.files).toEqual(expect.arrayContaining(["dist", "README.md"]));
   });
+
+  it("points package readers to the detailed landing schema guide", () => {
+    expect(readme).toContain("Interactive JSON Schema guide");
+    expect(readme).toContain("parseAgentSessionContent");
+    expect(readme).toContain("bun run dev");
+  });
 });

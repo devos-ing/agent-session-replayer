@@ -173,6 +173,10 @@ const [caseIndex, setCaseIndex] = useState(0);
 "message" | "code" | "tool_call" | "tool_output" | "finding" | "patch" | "git_diff" | "status" | "result"
 ```
 
+## Interactive JSON Schema guide
+
+The repository landing page includes the full `parseAgentSessionContent` workflow, a copyable replay document, field-by-field reference, error paths, and runtime-only ID uniqueness rules. Run `bun run dev` from the repository root and open the **JSON Schema** section.
+
 ## Lifecycle ordering
 
 For each replayed event, `onEventStart(event, case)` fires once before text starts revealing, then `onEventComplete(event, case)` fires after its final grapheme. On the final event, `onEventComplete` fires before `onCaseComplete(case)`. Restarting or navigating to a case begins a new run and may fire the callbacks again for that run.

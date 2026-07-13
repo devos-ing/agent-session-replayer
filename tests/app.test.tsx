@@ -1,7 +1,8 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { agentSessionContentJsonSchema } from "agent-session-replayer/schema";
 import App from "../src/App";
+import { schemaGuideReplayContentJson } from "../src/schema-guide-content";
 
 const initialClipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, "clipboard");
 
@@ -23,7 +24,8 @@ function setClipboard(writeText: (value: string) => Promise<void>) {
 }
 
 function finishCurrentCase() {
-  for (let index = 0; index < 5000 && !screen.queryByText(/case complete/i); index += 1) {
+  const replay = within(screen.getByRole("region", { name: "Two-agent review conversation" }));
+  for (let index = 0; index < 5000 && !replay.queryByText(/case complete/i); index += 1) {
     act(() => vi.runOnlyPendingTimers());
   }
 }
@@ -39,7 +41,8 @@ describe("case autoplay experience", () => {
   it("autoplays every event and collapses completed messages", () => {
     vi.useFakeTimers();
     const { container } = render(<App />);
-    for (let index = 0; index < 5000 && !screen.queryByText(/case complete/i); index += 1) {
+    const replay = within(screen.getByRole("region", { name: "Two-agent review conversation" }));
+    for (let index = 0; index < 5000 && !replay.queryByText(/case complete/i); index += 1) {
       act(() => vi.runOnlyPendingTimers());
     }
     expect(container.querySelectorAll(".asr-event-summary-row")).toHaveLength(8);
@@ -198,7 +201,7 @@ describe("interactive replay landing", () => {
     expect(screen.getByRole("heading", { name: "JSON Schema" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "React usage" })).toBeInTheDocument();
     expect(screen.getByText("bun add agent-session-replayer")).toBeInTheDocument();
-    expect(screen.getByText(/import "agent-session-replayer\/styles\.css"/)).toBeInTheDocument();
+    expect(screen.getAllByText(/import "agent-session-replayer\/styles\.css"/)).toHaveLength(2);
     expect(screen.getByText(/runtime parser also enforces unique case ids/i)).toBeInTheDocument();
     expect(screen.getByText("Powered by the DevOS team")).toBeInTheDocument();
 
@@ -209,6 +212,78 @@ describe("interactive replay landing", () => {
       expect(link).toHaveAttribute("target", "_blank");
       expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"));
     }
+  });
+
+  it("renders the task-first schema guide with progressive disclosures", () => {
+    render(<App />);
+
+    expect(screen.getByRole("navigation", { name: "JSON Schema guide" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Quick start" })).toHaveAttribute(
+      "href",
+      "#schema-quick-start",
+    );
+    expect(screen.getByRole("link", { name: "Field reference" })).toHaveAttribute(
+      "href",
+      "#schema-field-reference",
+    );
+
+    const quickStart = screen.getByText("Quick start", { selector: "summary" }).closest("details");
+    const completeExample = screen
+      .getByText("Complete replay document", { selector: "summary" })
+      .closest("details");
+    expect(quickStart).toHaveAttribute("open");
+    expect(completeExample).not.toHaveAttribute("open");
+
+    expect(screen.getByText(/parseAgentSessionContent\(input\)/)).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Field reference", { selector: "summary" }));
+    expect(screen.getByText("AgentSessionContent", { selector: "h4" })).toBeInTheDocument();
+    expect(screen.getAllByText(/Draft 2020-12/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/document-level issues use/i)).toHaveTextContent("$");
+  });
+
+  it("copies the exact complete replay document with accessible feedback", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    setClipboard(writeText);
+    render(<App />);
+
+    fireEvent.click(screen.getByText("Complete replay document", { selector: "summary" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy replay JSON" }));
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(schemaGuideReplayContentJson));
+    expect(screen.getByRole("status")).toHaveTextContent("Copied replay JSON.");
+  });
+
+  it("offers a manual fallback when replay JSON copying fails", async () => {
+    setClipboard(vi.fn().mockRejectedValue(new Error("denied")));
+    render(<App />);
+
+    fireEvent.click(screen.getByText("Complete replay document", { selector: "summary" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy replay JSON" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Copy failed. Select the replay JSON and copy it manually.",
+    );
+  });
+
+  it("documents parser truth, privacy, compatibility, and semantic references", () => {
+    render(<App />);
+
+    expect(screen.getByText(/parsing is synchronous, makes no network request/i)).toBeInTheDocument();
+    expect(screen.getByText(/runtime parser is authoritative for all three scopes/i)).toBeInTheDocument();
+    expect(screen.getByText(/no model, tool, command, repository inspection, upload, or persistence/i))
+      .toBeInTheDocument();
+    expect(screen.getAllByText(/agent-session-replayer\/schema/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Draft 2020-12/).length).toBeGreaterThan(0);
+
+    expect(screen.getByLabelText("Replay content parser example")).toHaveAttribute("tabindex", "0");
+    fireEvent.click(screen.getByText("Complete replay document", { selector: "summary" }));
+    expect(screen.getByLabelText("Complete replay JSON")).toHaveAttribute("tabindex", "0");
+    fireEvent.click(screen.getByText("Field reference", { selector: "summary" }));
+    expect(screen.getAllByRole("table")).toHaveLength(5);
+    expect(screen.getByRole("table", { name: "AgentSessionContent" })).toBeInTheDocument();
+    expect(screen.getByRole("table", { name: "AgentSessionBlock" })).toBeInTheDocument();
+    expect(screen.getByText("Quick start", { selector: "summary" })).toBeInTheDocument();
+    expect(screen.getByText("Compatibility", { selector: "summary" })).toBeInTheDocument();
   });
 
   it("copies the exact canonical schema with perceivable success feedback", async () => {

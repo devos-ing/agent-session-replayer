@@ -21,6 +21,10 @@ The Vite demo is a React-developer landing page around the embeddable component.
 5. React usage shows the Bun install command, root component import, precompiled stylesheet import, and minimal render contract. Consumers do not need Tailwind CSS.
 6. The footer includes the exact attribution “Powered by the DevOS team,” a GitHub link, and another scripted-playback disclosure.
 
+The JSON Schema section is also the detailed data-contract guide. It keeps the raw schema first, then provides an in-page task-first reference: Quick start, complete replay document, field reference, validation and errors, ID uniqueness, and compatibility. Quick start is open by default; the remaining sections use native disclosures with stable anchors. The complete example is copyable and must pass the public runtime parser unchanged.
+
+The guide owns schema construction, validation, error paths, and runtime-only uniqueness documentation. React usage remains focused on installation and rendering. At narrow widths, field tables become labeled stacked cards without losing their field/type/status/rules/purpose relationships. Landing guide CSS remains separate from all package `asr-` selectors.
+
 The public schema subpath exports `AgentSessionContent`, `parseAgentSessionContent(value)`, and `agentSessionContentJsonSchema`. The parser and root component props validation share the same private strict Zod graph. JSON Schema describes structural constraints and runtime-only uniqueness behavior; the runtime parser remains the authoritative validator for supplied JavaScript values.
 
 Draft and applied content are separate state. Editing never changes the preview. Apply first runs `JSON.parse`, then the public package parser. A failed parse announces a useful error and preserves the last valid preview. A successful apply clears the error, announces the update, and remounts the replayer at case zero. Editor content remains in browser memory and is never uploaded, submitted, or persisted.

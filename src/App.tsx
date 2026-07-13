@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { AgentSessionReplayer } from "agent-session-replayer";
-import {
-  agentSessionContentJsonSchema,
-  parseAgentSessionContent,
-} from "agent-session-replayer/schema";
+import { parseAgentSessionContent } from "agent-session-replayer/schema";
 import "agent-session-replayer/styles.css";
 import "./styles.css";
 import { initialReplayContent, initialReplayContentJson } from "./demo-content";
+import { SchemaGuide } from "./SchemaGuide";
 
 const GITHUB_URL = "https://github.com/devos-ing/agent-session-replayer";
-const schemaJson = JSON.stringify(agentSessionContentJsonSchema, null, 2);
 const usageExample = `import {
   AgentSessionReplayer,
   type AgentSession,
@@ -24,15 +21,12 @@ export function ReplayExample({
   return <AgentSessionReplayer agents={agents} cases={cases} />;
 }`;
 
-type CopyFeedback = { kind: "success" | "error"; message: string } | null;
-
 export default function App() {
   const [draft, setDraft] = useState(initialReplayContentJson);
   const [appliedContent, setAppliedContent] = useState(initialReplayContent);
   const [applyRevision, setApplyRevision] = useState(0);
   const [editorError, setEditorError] = useState<string | null>(null);
   const [editorStatus, setEditorStatus] = useState("Example content is loaded.");
-  const [copyFeedback, setCopyFeedback] = useState<CopyFeedback>(null);
 
   function applyDraft() {
     try {
@@ -46,18 +40,6 @@ export default function App() {
       setEditorError(error instanceof SyntaxError
         ? `Enter valid JSON: ${error.message}`
         : error instanceof Error ? error.message : "Replay content is invalid.");
-    }
-  }
-
-  async function copySchema() {
-    try {
-      await navigator.clipboard.writeText(schemaJson);
-      setCopyFeedback({ kind: "success", message: "Copied JSON Schema." });
-    } catch {
-      setCopyFeedback({
-        kind: "error",
-        message: "Copy failed. Select the schema and copy it manually.",
-      });
     }
   }
 
@@ -139,30 +121,7 @@ export default function App() {
         </div>
       </section>
 
-      <section className="landing-section schema-section" id="schema" aria-labelledby="schema-title">
-        <div className="section-heading section-heading--split">
-          <div>
-            <p className="eyebrow">Validate before rendering</p>
-            <h2 id="schema-title">JSON Schema</h2>
-            <p>
-              The runtime parser also enforces unique case IDs, event IDs within each case, and block IDs
-              within each event.
-            </p>
-          </div>
-          <div className="copy-action">
-            <button type="button" onClick={copySchema}>Copy JSON Schema</button>
-            {copyFeedback && <p
-              role={copyFeedback.kind === "success" ? "status" : "alert"}
-              aria-live={copyFeedback.kind === "success" ? "polite" : "assertive"}
-            >
-              {copyFeedback.message}
-            </p>}
-          </div>
-        </div>
-        <pre className="code-surface" aria-label="Agent session content JSON Schema" tabIndex={0}>
-          <code>{schemaJson}</code>
-        </pre>
-      </section>
+      <SchemaGuide />
 
       <section className="landing-section usage-section" id="usage" aria-labelledby="usage-title">
         <div className="section-heading">
