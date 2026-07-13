@@ -70,11 +70,30 @@ describe("compiled package CSS isolation", () => {
     expect(css).toContain("[data-agent-session-replayer]");
     expect(css).toMatch(/\[data-agent-session-replayer\]\{[^}]*height:var\(--asr-height\)/);
     expect(css).toMatch(/\.asr-chat-stage\{[^}]*height:100%/);
-    expect(css).toMatch(/\.asr-transcript\{[^}]*min-height:0[^}]*overflow-y:auto/);
+    expect(css).toMatch(/\.asr-transcript\{[^}]*min-height:0[^}]*(?:overflow-y:auto|overflow:hidden auto)/);
     expect(css).not.toContain("min-height:440px");
     expect(css).toMatch(/\[data-agent-session-replayer\]\{[^}]*min-width:0[^}]*max-width:100%/);
     expect(css).not.toContain("min-width:320px");
     expect(css).toMatch(/\[data-agent-session-replayer\]\{[^}]*border:1px solid var\(--asr-border\)[^}]*border-radius:22px/);
     expect(css).not.toMatch(/\.asr-chat-stage\{[^}]*border:/);
+  });
+
+  it("keeps transcript overflow vertical and wraps messages", () => {
+    const transcriptRule = css.match(/\.asr-transcript\{([^}]*)\}/)?.[1];
+    expect(transcriptRule).toMatch(/overflow-y:auto|overflow:hidden auto/);
+    expect(transcriptRule).toMatch(/overflow-x:hidden|overflow:hidden auto/);
+
+    const messageRule = css.match(/\.asr-chat-block--message p\{([^}]*)\}/)?.[1];
+    expect(messageRule).toContain("white-space:pre-wrap");
+    expect(messageRule).toContain("overflow-wrap:anywhere");
+
+    const codeRule = css.match(/\.asr-chat-block--code pre\{([^}]*)\}/)?.[1];
+    expect(codeRule).toMatch(/overflow-x:auto|overflow:auto hidden/);
+    expect(codeRule).toContain("white-space:pre");
+    expect(codeRule).toContain("overflow-wrap:normal");
+
+    const diffRule = css.match(/\.asr-chat-block \.asr-git-diff\{([^}]*)\}/)?.[1];
+    expect(diffRule).toMatch(/overflow-x:auto|overflow:auto hidden/);
+    expect(diffRule).toContain("white-space:pre");
   });
 });

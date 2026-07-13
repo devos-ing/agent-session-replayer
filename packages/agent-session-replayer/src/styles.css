@@ -60,7 +60,7 @@
   [data-agent-session-replayer] .asr-agent div>span { color:#686e7b;font:12px ui-monospace,monospace }
   [data-agent-session-replayer] .asr-agent--reviewer div>span { color:var(--asr-danger) }
   [data-agent-session-replayer] .asr-agent p { margin:8px 0 0;color:#6b707b;font-size:11px }
-  [data-agent-session-replayer] .asr-transcript { display:flex;flex-direction:column;min-height:0;flex:1;padding:18px 48px 36px;gap:10px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable }
+  [data-agent-session-replayer] .asr-transcript { display:flex;flex-direction:column;min-height:0;flex:1;padding:18px 48px 36px;gap:10px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable }
   [data-agent-session-replayer] .asr-collapse-shell { position:relative;min-height:46px;overflow:hidden;contain:layout paint }
   [data-agent-session-replayer] .asr-collapse-expanded { position:relative }
   [data-agent-session-replayer] .asr-collapse-summary { position:absolute;inset:0;opacity:0;pointer-events:none }
@@ -89,7 +89,9 @@
   [data-agent-session-replayer] .asr-chat-block header span { margin-right:12px;color:#555c68;text-transform:uppercase }
   [data-agent-session-replayer] .asr-chat-block p,[data-agent-session-replayer] .asr-chat-block pre { margin:0;padding:16px 18px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.7 }
   [data-agent-session-replayer] .asr-chat-block pre { overflow:auto;color:#c7ccd6;font:12px/1.65 ui-monospace,monospace }
+  [data-agent-session-replayer] .asr-chat-block--code pre { overflow:auto hidden;white-space:pre;overflow-wrap:normal }
   [data-agent-session-replayer] .asr-chat-block--message { background:#101216 }
+  [data-agent-session-replayer] .asr-chat-block--message p { white-space:pre-wrap;overflow-wrap:anywhere }
   [data-agent-session-replayer] .asr-expanded-event--reviewer .asr-chat-block--message { background:#1a1010;border-color:#61231f }
   [data-agent-session-replayer] .asr-chat-block--finding { background:#21100f;border-color:#732821 }
   [data-agent-session-replayer] .asr-chat-block--patch,[data-agent-session-replayer] .asr-chat-block--result { background:#0b1712;border-color:#174e32 }
