@@ -1,0 +1,86 @@
+<style>
+  .type-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+  .type-card { min-width:0; cursor:pointer; }
+  .type-card .card-image { padding:16px; background:#090b0d; }
+  .replayer-preview { overflow:hidden; border:1px solid #292d35; border-radius:16px; background:#0b0e11; color:#e8e5e0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  .preview-header { padding:18px 20px 10px; }
+  .workflow-line { display:flex; align-items:center; gap:10px; }
+  .brand-pill { padding:6px 9px; border:1px solid #6d3c2d; border-radius:999px; color:#e19070; font:700 9px ui-monospace,monospace; letter-spacing:.1em; text-transform:uppercase; }
+  .review-label { color:#777c88; font:9px ui-monospace,monospace; letter-spacing:.14em; text-transform:uppercase; }
+  .workflow-summary { margin:10px 0 0; color:#42d17b; font:10px/1.4 ui-monospace,monospace; }
+  .case-nav { border-top:1px solid #171a20; border-bottom:1px solid #292d35; }
+  .case-progress { display:block; color:#777c88; font:9px ui-monospace,monospace; }
+  .case-title { color:#e8e5e0; font-family:ui-monospace,monospace; font-weight:600; }
+  .case-subtitle { display:block; color:#5e6470; font:9px/1.4 ui-monospace,monospace; }
+  .transcript-placeholder { display:grid; gap:8px; padding:14px 20px 20px; }
+  .agent-line { width:42%; height:7px; border-radius:99px; background:#252a31; }
+  .event-line { height:34px; border:1px solid #20242b; border-radius:8px; background:#0c0f12; }
+  .option-a .case-nav { padding:9px 20px 10px; }
+  .option-a .case-title { margin:3px 0; font-size:14px; line-height:1.25; }
+  .option-b .case-nav { padding:12px 20px 14px; }
+  .option-b .case-title { margin:6px 0 7px; font-size:16px; line-height:1.3; }
+  .option-b .case-subtitle { font-size:10px; }
+  .option-c .case-nav { padding:15px 20px 18px; }
+  .option-c .case-title { margin:9px 0 10px; font-size:16px; line-height:1.4; }
+  .option-c .case-subtitle { font-size:11px; line-height:1.5; }
+  @media (max-width:900px) { .type-options { grid-template-columns:1fr; } }
+</style>
+
+<h2>Choose the title/subtitle spacing</h2>
+<p class="subtitle">Every option caps all replayer typography at 16px. Compare density and hierarchy around the case title and repository subtitle.</p>
+
+<div class="cards type-options">
+  <div class="card type-card option-a" data-choice="compact" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="replayer-preview">
+        <div class="preview-header">
+          <div class="workflow-line"><span class="brand-pill">✣ Claude Code</span><span class="review-label">Adversarial review</span></div>
+          <p class="workflow-summary">3 bugs caught before merge</p>
+        </div>
+        <div class="case-nav">
+          <span class="case-progress">Case 1 of 3</span>
+          <div class="case-title">Auth race condition</div>
+          <span class="case-subtitle">acme/web · fix/session-race · Message 2 of 5</span>
+        </div>
+        <div class="transcript-placeholder"><div class="agent-line"></div><div class="event-line"></div></div>
+      </div>
+    </div>
+    <div class="card-body"><h3>A · Compact</h3><p>14px title with 3px separation. Highest transcript density, but only a subtle hierarchy improvement.</p></div>
+  </div>
+
+  <div class="card type-card option-b" data-choice="balanced" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="replayer-preview">
+        <div class="preview-header">
+          <div class="workflow-line"><span class="brand-pill">✣ Claude Code</span><span class="review-label">Adversarial review</span></div>
+          <p class="workflow-summary">3 bugs caught before merge</p>
+        </div>
+        <div class="case-nav">
+          <span class="case-progress">Case 1 of 3</span>
+          <div class="case-title">Auth race condition</div>
+          <span class="case-subtitle">acme/web · fix/session-race · Message 2 of 5</span>
+        </div>
+        <div class="transcript-placeholder"><div class="agent-line"></div><div class="event-line"></div></div>
+      </div>
+    </div>
+    <div class="card-body"><h3>B · Balanced — recommended</h3><p>16px title with 6–7px separation and a 10px subtitle. Clear hierarchy without making the header feel tall.</p></div>
+  </div>
+
+  <div class="card type-card option-c" data-choice="airy" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="replayer-preview">
+        <div class="preview-header">
+          <div class="workflow-line"><span class="brand-pill">✣ Claude Code</span><span class="review-label">Adversarial review</span></div>
+          <p class="workflow-summary">3 bugs caught before merge</p>
+        </div>
+        <div class="case-nav">
+          <span class="case-progress">Case 1 of 3</span>
+          <div class="case-title">Auth race condition</div>
+          <span class="case-subtitle">acme/web · fix/session-race · Message 2 of 5</span>
+        </div>
+        <div class="transcript-placeholder"><div class="agent-line"></div><div class="event-line"></div></div>
+      </div>
+    </div>
+    <div class="card-body"><h3>C · Airy</h3><p>16px title with 9–10px separation and a larger subtitle. Easiest to scan, but uses more of the fixed-height frame.</p></div>
+  </div>
+</div>

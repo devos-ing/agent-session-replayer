@@ -35,6 +35,11 @@ export interface AgentSession {
   events: AgentSessionEvent[];
 }
 
+export interface AgentSessionContent {
+  agents: Record<AgentActor, AgentIdentity>;
+  cases: AgentSession[];
+}
+
 export interface AgentSessionColors {
   background?: string;
   surface?: string;
@@ -48,9 +53,7 @@ export interface AgentSessionColors {
   focus?: string;
 }
 
-export interface AgentSessionReplayerProps {
-  agents: Record<AgentActor, AgentIdentity>;
-  cases: AgentSession[];
+export interface AgentSessionReplayerProps extends AgentSessionContent {
   typingSpeed?: number;
   eventDelayMs?: number;
   height?: number;

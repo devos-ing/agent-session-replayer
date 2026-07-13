@@ -230,7 +230,7 @@ This workspace uses Bun 1.3.8 and `bun.lock`.
 ```bash
 bun install
 bun run dev
-bun test
+bun run test
 bun run typecheck
 bun run build
 bun run build:package

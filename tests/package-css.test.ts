@@ -35,6 +35,30 @@ describe("compiled package CSS isolation", () => {
     expect(css).not.toMatch(/Inter Variable|font-family:Inter/);
   });
 
+  it("caps typography and compacts the case title stack", () => {
+    const heroTitleRule = css.match(/\.asr-hero h1\{([^}]*)\}/)?.[1];
+    expect(heroTitleRule).toContain("font-size:16px");
+    expect(heroTitleRule).not.toContain("clamp(");
+
+    const avatarRule = css.match(/\.asr-agent-avatar\{([^}]*)\}/)?.[1];
+    expect(avatarRule).toContain("font-size:16px");
+
+    const titleStackRule = css.match(/\.asr-case-nav>div:first-child\{([^}]*)\}/)?.[1];
+    expect(titleStackRule).toContain("display:grid");
+    expect(titleStackRule).toContain("gap:3px");
+
+    const titleRule = css.match(/\.asr-case-title\{([^}]*)\}/)?.[1];
+    expect(titleRule).toContain("margin:0");
+    expect(titleRule).toContain("font:600 14px/1.3 ui-monospace,monospace");
+
+    const navRules = [...css.matchAll(/\.asr-case-nav\{([^}]*)\}/g)].map((match) => match[1]);
+    expect(navRules).toContainEqual(expect.stringContaining("padding:9px 48px 10px"));
+    expect(navRules).toContainEqual(expect.stringContaining("padding:9px 16px 10px"));
+
+    expect(css).not.toContain("font-size:18px");
+    expect(css).not.toContain("font-size:clamp(");
+  });
+
   it("does not emit Tailwind utilities, resets, or universal selectors", () => {
     expect(css).not.toMatch(/(^|[},])\s*\.(fixed|block|border)(?=[\s.{,:])/);
     expect(css).not.toMatch(/(^|[},])\s*\*(?=[\s,{.:#[])/);

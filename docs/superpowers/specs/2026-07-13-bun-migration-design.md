@@ -13,7 +13,7 @@ Make Bun the explicit package manager and documented development runtime for Age
 
 ## Verification
 
-Run `bun install --frozen-lockfile`, `bun test`, `bun run typecheck`, and `bun run build`. Confirm the package manager metadata, lockfile, and documentation agree.
+Run `bun install --frozen-lockfile`, `bun run test`, `bun run typecheck`, and `bun run build`. `bun run test` preserves the repository's Vitest + jsdom test harness while executing it through Bun. Confirm the package manager metadata, lockfile, and documentation agree.
 
 ## Non-Goals
 
