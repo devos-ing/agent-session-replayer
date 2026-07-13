@@ -77,12 +77,63 @@ function ExpandedEvent({ event, visibleEvent, typing }: { event: AgentSessionEve
   </article>;
 }
 
-function EventSummaryRow({ event, index, className = "" }: { event: AgentSessionEvent; index: number; className?: string }) {
-  return <div className={`asr-event-summary-row asr-event-summary-row--${event.actor}${className ? ` ${className}` : ""}`}>
+function EventSummaryContent({ event, index }: { event: AgentSessionEvent; index: number }) {
+  return <>
     <span>{String(index + 1).padStart(2, "0")}</span>
     <strong>{event.title}</strong>
     <p>{event.summary}</p>
-  </div>;
+    <span className="asr-disclosure" aria-hidden="true">⌄</span>
+  </>;
+}
+
+function EventSummaryRow({ event, index, contentId, onToggle, className = "" }: {
+  event: AgentSessionEvent;
+  index: number;
+  contentId: string;
+  onToggle: () => void;
+  className?: string;
+}) {
+  return <button
+    type="button"
+    className={`asr-event-summary-row asr-event-summary-row--${event.actor}${className ? ` ${className}` : ""}`}
+    aria-expanded="false"
+    aria-controls={contentId}
+    aria-label={`Expand ${event.title}`}
+    onClick={onToggle}
+  >
+    <EventSummaryContent event={event} index={index} />
+  </button>;
+}
+
+function CompletedEvent({ event, index, expanded, onToggle }: {
+  event: AgentSessionEvent;
+  index: number;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const contentId = `asr-event-${event.id}`;
+  if (!expanded) {
+    return <div className="asr-completed-event">
+      <EventSummaryRow event={event} index={index} contentId={contentId} onToggle={onToggle} />
+      <div id={contentId} hidden />
+    </div>;
+  }
+
+  return <article className={`asr-expanded-event asr-expanded-event--${event.actor}`} aria-label={event.title}>
+    <button
+      type="button"
+      className="asr-expanded-toggle"
+      aria-expanded="true"
+      aria-controls={contentId}
+      aria-label={`Collapse ${event.title}`}
+      onClick={onToggle}
+    >
+      <span>{event.actor === "implementer" ? "✣ claude" : "adversarial reviewer ✣"}</span>
+      <strong>{event.title}</strong>
+      <span className="asr-disclosure" aria-hidden="true">⌃</span>
+    </button>
+    <div className="asr-blocks" id={contentId}>{event.blocks.map((block) => <Block block={block} key={block.id} />)}</div>
+  </article>;
 }
 
 function CollapsingEvent({
@@ -146,7 +197,9 @@ function CollapsingEvent({
       <ExpandedEvent event={event} visibleEvent={event} typing={false} />
     </div>
     <div className="asr-collapse-summary" ref={summaryRef} aria-hidden="true">
-      <EventSummaryRow event={event} index={index} />
+      <div className={`asr-event-summary-row asr-event-summary-row--${event.actor}`}>
+        <EventSummaryContent event={event} index={index} />
+      </div>
     </div>
   </div>;
 }
@@ -178,6 +231,7 @@ export function AgentSessionReplayer(props: AgentSessionReplayerProps) {
   const resolvedCaseIndex = controlled ? caseIndex : internalCaseIndex;
   const [state, dispatch] = useReducer(playbackReducer, undefined, initialPlaybackState);
   const [generation, bumpGeneration] = useReducer((value: number) => value + 1, 0);
+  const [expandedEventIds, setExpandedEventIds] = useState<Set<string>>(() => new Set());
   const reduceMotion = usePrefersReducedMotion();
   const transcriptRef = useRef<HTMLDivElement>(null);
   const started = useRef(new Set<string>());
@@ -198,6 +252,7 @@ export function AgentSessionReplayer(props: AgentSessionReplayerProps) {
   useEffect(() => {
     if (previousCase.current === resolvedCaseIndex) return;
     previousCase.current = resolvedCaseIndex;
+    setExpandedEventIds(new Set());
     bumpGeneration();
     dispatch({ type: "RESTART" });
   }, [resolvedCaseIndex]);
@@ -261,8 +316,18 @@ export function AgentSessionReplayer(props: AgentSessionReplayerProps) {
   };
 
   const restart = () => {
+    setExpandedEventIds(new Set());
     bumpGeneration();
     dispatch({ type: "RESTART" });
+  };
+
+  const toggleEvent = (eventId: string) => {
+    setExpandedEventIds((current) => {
+      const next = new Set(current);
+      if (next.has(eventId)) next.delete(eventId);
+      else next.add(eventId);
+      return next;
+    });
   };
 
   const style = {
@@ -287,11 +352,11 @@ export function AgentSessionReplayer(props: AgentSessionReplayerProps) {
       </div>
       <div className="asr-agent-row"><Agent actor="implementer" active={event.actor === "implementer"} agent={agents.implementer} /><Agent actor="reviewer" active={event.actor === "reviewer"} agent={agents.reviewer} /></div>
       <div className="asr-transcript" ref={transcriptRef}>
-        {activeCase.events.slice(0, eventIndex).map((past, index) => <EventSummaryRow event={past} index={index} key={past.id} />)}
+        {activeCase.events.slice(0, eventIndex).map((past, index) => <CompletedEvent event={past} index={index} expanded={expandedEventIds.has(past.id)} onToggle={() => toggleEvent(past.id)} key={past.id} />)}
         {phase === "collapsing" ? (
           <CollapsingEvent event={event} index={eventIndex} reduceMotion={reduceMotion} onComplete={finishCollapse} />
         ) : phase === "between-events" ? (
-          <EventSummaryRow event={event} index={eventIndex} key={event.id} />
+          <CompletedEvent event={event} index={eventIndex} expanded={expandedEventIds.has(event.id)} onToggle={() => toggleEvent(event.id)} key={event.id} />
         ) : (
           <div><ExpandedEvent event={event} visibleEvent={visibleEvent} typing={phase === "typing"} /></div>
         )}

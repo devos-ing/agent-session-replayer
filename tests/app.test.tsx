@@ -4,6 +4,12 @@ import App from "../src/App";
 
 afterEach(() => vi.useRealTimers());
 
+function finishCurrentCase() {
+  for (let index = 0; index < 5000 && !screen.queryByText(/case complete/i); index += 1) {
+    act(() => vi.runOnlyPendingTimers());
+  }
+}
+
 describe("case autoplay experience", () => {
   it("starts case one without a user click", () => {
     render(<App />);
@@ -21,6 +27,36 @@ describe("case autoplay experience", () => {
     expect(container.querySelectorAll(".asr-event-summary-row")).toHaveLength(8);
     expect(screen.getByRole("article", { name: /approved/i })).toBeInTheDocument();
     expect(screen.getAllByText(/case complete/i).length).toBeGreaterThan(0);
+  });
+
+  it("expands and collapses completed events independently", () => {
+    vi.useFakeTimers();
+    render(<App />);
+    finishCurrentCase();
+
+    fireEvent.click(screen.getByRole("button", { name: /expand task received/i }));
+    fireEvent.click(screen.getByRole("button", { name: /expand plan the fix/i }));
+
+    expect(screen.getByRole("button", { name: /collapse task received/i })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: /collapse plan the fix/i })).toHaveAttribute("aria-expanded", "true");
+
+    fireEvent.click(screen.getByRole("button", { name: /collapse task received/i }));
+    expect(screen.getByRole("button", { name: /expand task received/i })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: /collapse plan the fix/i })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("clears expanded completed events when restarting or changing cases", () => {
+    vi.useFakeTimers();
+    render(<App />);
+    finishCurrentCase();
+    fireEvent.click(screen.getByRole("button", { name: /expand task received/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /restart case/i }));
+    finishCurrentCase();
+    expect(screen.getByRole("button", { name: /expand task received/i })).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.click(screen.getByRole("button", { name: /next case/i }));
+    expect(screen.queryByRole("button", { name: /collapse task received/i })).not.toBeInTheDocument();
   });
 
   it("renders the demo Git diff with semantic lines", () => {

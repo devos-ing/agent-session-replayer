@@ -63,17 +63,25 @@
   [data-agent-session-replayer] .asr-collapse-shell { position:relative;min-height:46px;overflow:hidden;contain:layout paint }
   [data-agent-session-replayer] .asr-collapse-expanded { position:relative }
   [data-agent-session-replayer] .asr-collapse-summary { position:absolute;inset:0;opacity:0;pointer-events:none }
-  [data-agent-session-replayer] .asr-event-summary-row { min-height:46px;border:1px solid #20242b;border-radius:9px;display:grid;grid-template-columns:34px 180px 1fr;align-items:center;gap:12px;padding:8px 15px;color:#666c77;background:#0c0f12 }
+  [data-agent-session-replayer] .asr-completed-event { min-width:0 }
+  [data-agent-session-replayer] .asr-event-summary-row { width:100%;min-height:46px;border:1px solid #20242b;border-radius:9px;display:grid;grid-template-columns:34px 180px minmax(0,1fr) 18px;align-items:center;gap:12px;padding:8px 15px;color:#666c77;background:#0c0f12;font:inherit;text-align:left;cursor:pointer }
   [data-agent-session-replayer] .asr-event-summary-row--reviewer { margin-left:18%;border-color:#332322 }
   [data-agent-session-replayer] .asr-event-summary-row--implementer { margin-right:18% }
   [data-agent-session-replayer] .asr-event-summary-row span { font:9px ui-monospace,monospace }
   [data-agent-session-replayer] .asr-event-summary-row strong { color:#9b9ea6;font-size:11px }
   [data-agent-session-replayer] .asr-event-summary-row p { white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;font-size:10px }
+  [data-agent-session-replayer] button.asr-event-summary-row:hover { border-color:#3a404a;background:#101419 }
+  [data-agent-session-replayer] button.asr-event-summary-row:focus-visible { outline:2px solid var(--asr-focus);outline-offset:3px }
+  [data-agent-session-replayer] .asr-disclosure { justify-self:end;transition:transform .18s ease }
   [data-agent-session-replayer] .asr-expanded-event { position:relative;width:min(900px,78%);padding-top:8px }
   [data-agent-session-replayer] .asr-expanded-event--reviewer { margin-left:auto }
   [data-agent-session-replayer] .asr-event-heading { display:flex;align-items:center;justify-content:space-between;margin:0 0 10px;color:#838894;font:11px ui-monospace,monospace }
   [data-agent-session-replayer] .asr-expanded-event--reviewer .asr-event-heading { flex-direction:row-reverse;color:var(--asr-danger) }
   [data-agent-session-replayer] .asr-event-heading strong { color:#c8c8ca;font-size:12px }
+  [data-agent-session-replayer] .asr-expanded-toggle { display:flex;align-items:center;justify-content:space-between;width:100%;margin:0 0 10px;padding:0;border:0;background:transparent;color:#838894;text-align:inherit;cursor:pointer;font:11px ui-monospace,monospace }
+  [data-agent-session-replayer] .asr-expanded-event--reviewer .asr-expanded-toggle { flex-direction:row-reverse;color:var(--asr-danger) }
+  [data-agent-session-replayer] .asr-expanded-toggle strong { color:#c8c8ca;font-size:12px }
+  [data-agent-session-replayer] .asr-expanded-toggle:focus-visible { outline:2px solid var(--asr-focus);outline-offset:3px }
   [data-agent-session-replayer] .asr-blocks { display:flex;flex-direction:column;gap:10px }
   [data-agent-session-replayer] .asr-chat-block { overflow:hidden;border:1px solid #2a2e36;border-radius:10px;background:#0a0c0f;color:#c4c5c9 }
   [data-agent-session-replayer] .asr-chat-block header { border-bottom:1px solid #242830;padding:9px 14px;color:#878d99;font:10px ui-monospace,monospace }
@@ -123,7 +131,8 @@
   [data-agent-session-replayer] .asr-agent { opacity:.35 }
   [data-agent-session-replayer] .asr-agent p { display:none }
   [data-agent-session-replayer] .asr-transcript { padding:12px 14px 24px;min-height:0 }
-  [data-agent-session-replayer] .asr-event-summary-row { grid-template-columns:24px minmax(90px,130px) 1fr;padding:7px 9px }
+  [data-agent-session-replayer] .asr-event-summary-row { grid-template-columns:24px minmax(0,1fr) 18px;padding:7px 9px }
+  [data-agent-session-replayer] .asr-event-summary-row p { display:none }
   [data-agent-session-replayer] .asr-event-summary-row--reviewer,[data-agent-session-replayer] .asr-event-summary-row--implementer { margin:0 }
   [data-agent-session-replayer] .asr-expanded-event { width:100% }
   [data-agent-session-replayer] .asr-chat-block p,[data-agent-session-replayer] .asr-chat-block pre { font-size:11px;padding:14px }
